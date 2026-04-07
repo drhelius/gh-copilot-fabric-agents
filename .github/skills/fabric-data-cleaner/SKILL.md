@@ -33,6 +33,7 @@ Classify the table's columns to select which notebooks to use:
 - NIE prefix replacement is `X=0`, `Y=1`, `Z=2` — **not** their ASCII values. This is a common implementation error.
 - Fabric notebooks use `display()` instead of `df.show()` for rich rendering. All templates use `display()`.
 - Fix cells write to `{TABLE_NAME}_cleaned` as Delta tables. The original table is never modified. All notebooks write to the same `_cleaned` table — run them in order so each builds on the previous result.
+- **Delta schema mismatch**: Notebooks that add flag columns (outlier flags, DNI valid, email/phone valid) change the schema of the `_cleaned` table. All fix cells use `.option("overwriteSchema", "true")` to handle this. Without it, the second notebook in the chain would fail with `_LEGACY_ERROR_TEMP_DELTA_0007`.
 
 ## Notebooks — Always Applicable
 
