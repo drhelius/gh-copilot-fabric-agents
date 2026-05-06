@@ -1,6 +1,6 @@
 # Fabric Agents
 
-AI agents for Microsoft Fabric that automate data cleaning, semantic model creation, and synthetic data generation. Built as [VS Code Agent Skills](https://agentskills.io/) for use with GitHub Copilot in Agent mode.
+AI agents for Microsoft Fabric that automate data cleaning, semantic model creation, synthetic data generation, and metadata proposal creation. Built as [VS Code Agent Skills](https://agentskills.io/) for use with GitHub Copilot in Agent mode.
 
 <img height="150" alt="image" src="https://github.com/user-attachments/assets/853f752b-2b20-487e-8136-03d8f95be967" /><img width="150" alt="image" src="https://github.com/user-attachments/assets/c02c67e2-bf47-401f-bfa1-4aaaadfb4cf0" />
 
@@ -28,6 +28,12 @@ Designs realistic data schemas from domain templates (retail, healthcare, airlin
 
 **Prompt**: `/generate-synthetic-data retail data for my_lakehouse`
 
+### Fabric Metadata Creation
+
+Analyzes Fabric lakehouse tables or semantic models and generates reviewable metadata proposals for data stewards and catalog ingestion planning. Suggests descriptions, glossary terms, classifications, Purview-like sensitivity labels, CDE candidates, relationship and lineage hints, data quality rules, and data product groupings with explicit evidence, assumptions, open questions, and confidence levels.
+
+**Prompt**: `/generate-metadata tables in my_lakehouse for steward review`
+
 ## Prerequisites
 
 - [VS Code](https://code.visualstudio.com/) with [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) extension
@@ -50,11 +56,13 @@ Designs realistic data schemas from domain templates (retail, healthcare, airlin
 ├── agents/
 │   ├── fabric-data-cleaner.agent.md        # Data cleaning agent
 │   ├── fabric-semantic-model.agent.md      # Semantic model agent
-│   └── fabric-synthetic-data.agent.md      # Synthetic data agent
+│   ├── fabric-synthetic-data.agent.md      # Synthetic data agent
+│   └── fabric-metadata-creation.agent.md   # Metadata proposal agent
 ├── prompts/
 │   ├── clean-table.prompt.md               # /clean-table entry point
 │   ├── create-semantic-model.prompt.md     # /create-semantic-model entry point
-│   └── generate-synthetic-data.prompt.md   # /generate-synthetic-data entry point
+│   ├── generate-synthetic-data.prompt.md   # /generate-synthetic-data entry point
+│   └── generate-metadata.prompt.md         # /generate-metadata entry point
 └── skills/
     ├── fabric-data-cleaner/
     │   ├── SKILL.md                        # Algorithm reference + gotchas
@@ -67,15 +75,19 @@ Designs realistic data schemas from domain templates (retail, healthcare, airlin
     │   ├── SKILL.md                        # TMDL templates + classification rules
     │   └── scripts/
     │       └── fabric_semantic_model.py    # Deploy/list/delete models + SQL endpoint + table schemas
-    └── fabric-synthetic-data/
-        ├── SKILL.md                        # Domain templates + generation rules
+    ├── fabric-synthetic-data/
+    │   ├── SKILL.md                        # Domain templates + generation rules
+    │   └── scripts/
+    │       └── fabric_synthetic_data.py    # Upload Parquet + load as Delta tables
+    └── fabric-metadata-creation/
+        ├── SKILL.md                        # Metadata categories + inference rules
         └── scripts/
-            └── fabric_synthetic_data.py    # Upload Parquet + load as Delta tables
+            └── fabric_metadata.py          # Discovery/export + PDF/validation helpers
 ```
 
 ## How It Works
 
-Each agent follows a phased workflow with clear human-in-the-loop checkpoints:
+Each agent follows a phased workflow with clear human-in-the-loop checkpoints where production changes are possible. The metadata creation agent is local-only after target selection and produces review artifacts instead of deploying governance changes.
 
 1. **Discover** — Uses the Fabric MCP Server to find workspaces, lakehouses, and tables
 2. **Analyze** — Classifies data and presents findings for user confirmation
@@ -95,8 +107,9 @@ These are created at runtime and gitignored:
 | `cleaning_runs/` | Data Cleaner | Customized PySpark notebooks per table/run |
 | `semantic_models/` | Semantic Model | TMDL definition files per model/run |
 | `synthetic_data/` | Synthetic Data | Parquet files per generation run |
+| `metadata_proposals/` | Metadata Creation | Proposal JSON/PDF and standalone glossary Markdown/PDF per run |
 
-Each uses the pattern `{directory}/{lakehouse}/{name}/{YYYY-MM-DD_HHmmss}/` for multiple runs.
+Generated files use timestamped folders so multiple runs can be compared without overwriting prior output.
 
 ## Spanish Locale Support
 
